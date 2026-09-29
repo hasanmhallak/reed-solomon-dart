@@ -14,6 +14,11 @@ class ReedSolomonCodec {
   /// [firstConsecutiveRoot] defaults to `0` (reedsolo-compatible).
   /// [errorCorrectionSymbols] must be at least 1 and less than
   /// `fieldSize - 1`.
+  ///
+  /// Throws [ReedSolomonException] when:
+  /// * [errorCorrectionSymbols] is less than 1;
+  /// * [errorCorrectionSymbols] is not less than `finiteField.fieldSize - 1`;
+  /// * [firstConsecutiveRoot] is outside `0..finiteField.fieldSize - 2`.
   factory ReedSolomonCodec({
     required FiniteField finiteField,
     required int errorCorrectionSymbols,
@@ -57,6 +62,11 @@ class ReedSolomonCodec {
   }) : _generatorPolynomial = generatorPolynomial;
 
   /// Convenience constructor that creates and owns a new [FiniteField].
+  ///
+  /// Throws [ReedSolomonException] for the same codec configuration rules as
+  /// [ReedSolomonCodec.new]. Invalid [symbolSizeInBits], [primitivePolynomial],
+  /// or [primitiveElement] values may also cause the underlying [FiniteField]
+  /// constructor to throw before those checks run.
   factory ReedSolomonCodec.fromFieldParameters({
     required int symbolSizeInBits,
     required int primitivePolynomial,
@@ -132,8 +142,12 @@ class ReedSolomonCodec {
 
   /// Encodes [data] by appending exactly [errorCorrectionSymbols] ECC symbols.
   ///
-  /// Does not mutate [data]. Rejects empty [data], symbols outside the field,
-  /// and codewords longer than `fieldSize - 1`.
+  /// Does not mutate [data].
+  ///
+  /// Throws [ReedSolomonException] when:
+  /// * [data] is empty;
+  /// * any element of [data] is outside `0..fieldSize - 1`;
+  /// * `data.length + errorCorrectionSymbols` exceeds `fieldSize - 1`.
   List<int> encode(List<int> data) {
     if (data.isEmpty) {
       throw ReedSolomonException('data must not be empty');
@@ -172,6 +186,11 @@ class ReedSolomonCodec {
   /// Returns true if all syndromes of [codeword] are zero.
   ///
   /// Does not attempt correction and does not mutate [codeword].
+  ///
+  /// Throws [ReedSolomonException] when:
+  /// * any element of [codeword] is outside `0..fieldSize - 1`;
+  /// * [codeword] length is not greater than [errorCorrectionSymbols];
+  /// * [codeword] length exceeds `fieldSize - 1`.
   bool isValid(List<int> codeword) {
     _validateSymbols(codeword, 'codeword');
     if (codeword.length <= errorCorrectionSymbols) {
@@ -241,12 +260,26 @@ class ReedSolomonCodec {
 
   /// Decodes [receivedCodeword], optionally using known [erasurePositions].
   ///
-  /// Does not mutate inputs. After correction, recalculates all syndromes and
-  /// throws [ReedSolomonDecodingException] if any remain non-zero.
+  /// Does not mutate inputs.
   ///
-  /// Zero syndromes mean the received word is a valid codeword for this codec.
-  /// That is not proof it equals the original transmitted message when the
-  /// number of corruptions exceeds the unique-decoding bound
+  /// Throws [ReedSolomonException] when:
+  /// * any element of [receivedCodeword] is outside `0..fieldSize - 1`;
+  /// * [receivedCodeword] length is not greater than [errorCorrectionSymbols];
+  /// * [receivedCodeword] length exceeds `fieldSize - 1`;
+  /// * [erasurePositions] contains more than [errorCorrectionSymbols] entries;
+  /// * any erasure position is negative, out of range for the codeword, or
+  ///   duplicated;
+  /// * the combined error-and-erasure count exceeds the correction capacity
+  ///   (`2 * unknownErrors + erasures > errorCorrectionSymbols`);
+  /// * an internal consistency check fails (Berlekamp–Massey degree, Chien
+  ///   search root count, Chien root overlapping a known erasure, or zero
+  ///   Forney formal derivative at an errata position);
+  /// * after correction, one or more syndromes are still non-zero.
+  ///
+  /// Zero syndromes after a successful return mean the corrected word is a valid
+  /// codeword for this codec. That is not proof it equals the original
+  /// transmitted message when the number of corruptions exceeds the
+  /// unique-decoding bound
   /// `2 * errors + erasures <= errorCorrectionSymbols`; the decoder may fail
   /// or miscorrect onto another codeword. Use an external checksum when that
   /// distinction matters.
@@ -314,7 +347,7 @@ class ReedSolomonCodec {
 
     final unknownDegree = unknownErrorLocator.length - 1;
     if (unknownDegree * 2 + validatedErasures.length > errorCorrectionSymbols) {
-      throw ReedSolomonDecodingException(
+      throw ReedSolomonException(
         'too many errors and erasures to correct '
         '(unknownDegree=$unknownDegree, '
         'erasures=${validatedErasures.length}, '
@@ -329,7 +362,7 @@ class ReedSolomonCodec {
     final erasureSet = validatedErasures.toSet();
     for (final position in unknownErrorPositions) {
       if (erasureSet.contains(position)) {
-        throw ReedSolomonDecodingException(
+        throw ReedSolomonException(
           'Chien search returned erasure position $position',
         );
       }
@@ -356,7 +389,7 @@ class ReedSolomonCodec {
 
     final verifiedSyndromes = _computeSyndromes(correctedCodeword);
     if (!_allZero(verifiedSyndromes)) {
-      throw ReedSolomonDecodingException(
+      throw ReedSolomonException(
         'correction failed final syndrome verification',
       );
     }
@@ -484,7 +517,7 @@ class ReedSolomonCodec {
       connection = connection.sublist(0, connection.length - 1);
     }
     if (connection.length - 1 < locatorDegree) {
-      throw ReedSolomonDecodingException(
+      throw ReedSolomonException(
         'Berlekamp-Massey locator degree inconsistency '
         '(trimmedDegree=${connection.length - 1}, '
         'locatorDegree=$locatorDegree)',
@@ -509,7 +542,7 @@ class ReedSolomonCodec {
       }
     }
     if (positions.length != expectedDegree) {
-      throw ReedSolomonDecodingException(
+      throw ReedSolomonException(
         'Chien search found ${positions.length} roots, '
         'expected $expectedDegree',
       );
@@ -577,7 +610,7 @@ class ReedSolomonCodec {
         }
       }
       if (derivative == 0) {
-        throw ReedSolomonDecodingException(
+        throw ReedSolomonException(
           'Forney derivative is zero at position $position',
         );
       }

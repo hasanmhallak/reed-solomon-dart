@@ -280,7 +280,7 @@ void main() {
     codeword[2] ^= 0x03;
     expect(
       () => codec.decode(codeword),
-      throwsA(isA<ReedSolomonDecodingException>()),
+      throwsA(isA<ReedSolomonException>()),
     );
   });
 
@@ -376,7 +376,7 @@ void main() {
     codeword[5] = 0xBB;
     expect(
       () => codec.decode(codeword),
-      throwsA(isA<ReedSolomonDecodingException>()),
+      throwsA(isA<ReedSolomonException>()),
     );
     final result = codec.decode(
       codeword,
@@ -514,7 +514,7 @@ void main() {
     try {
       final result = codec.decode(codeword);
       expect(codec.isValid(result.correctedCodeword), isTrue);
-    } on ReedSolomonDecodingException {
+    } on ReedSolomonException {
       // acceptable
     }
   });
@@ -541,7 +541,7 @@ void main() {
             if (!_listEquals(result.decodedData, original)) {
               sawSuccessfulDifferent = true;
             }
-          } on ReedSolomonDecodingException {
+          } on ReedSolomonException {
             sawThrow = true;
           }
         }
@@ -1183,7 +1183,7 @@ void main() {
       try {
         final result = codec.decode(corrupted);
         expect(codec.isValid(result.correctedCodeword), isTrue);
-      } on ReedSolomonDecodingException {
+      } on ReedSolomonException {
         // acceptable
       }
     }

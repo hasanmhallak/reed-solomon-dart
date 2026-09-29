@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:reed_solomon_codec/reed_solomon_codec.dart';
 
 void main() {
