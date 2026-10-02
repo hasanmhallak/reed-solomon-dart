@@ -1,5 +1,3 @@
-import 'package:collection/collection.dart';
-
 /// Result of a Reed-Solomon decode attempt.
 class ReedSolomonDecodeResult {
   /// Creates a decode result with unmodifiable defensive copies of all lists.
@@ -86,29 +84,5 @@ class ReedSolomonDecodeResult {
   @override
   String toString() {
     return 'ReedSolomonDecodeResult(decodedData: $decodedData, correctedCodeword: $correctedCodeword, correctedPositions: $correctedPositions, erasurePositions: $erasurePositions, unknownErrorPositions: $unknownErrorPositions, wasAlreadyValid: $wasAlreadyValid)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    final listEquals = const DeepCollectionEquality().equals;
-
-    return other is ReedSolomonDecodeResult &&
-        listEquals(other.decodedData, decodedData) &&
-        listEquals(other.correctedCodeword, correctedCodeword) &&
-        listEquals(other.correctedPositions, correctedPositions) &&
-        listEquals(other.erasurePositions, erasurePositions) &&
-        listEquals(other.unknownErrorPositions, unknownErrorPositions) &&
-        other.wasAlreadyValid == wasAlreadyValid;
-  }
-
-  @override
-  int get hashCode {
-    return decodedData.hashCode ^
-        correctedCodeword.hashCode ^
-        correctedPositions.hashCode ^
-        erasurePositions.hashCode ^
-        unknownErrorPositions.hashCode ^
-        wasAlreadyValid.hashCode;
   }
 }

@@ -8,7 +8,6 @@ environment:
 
 dependencies:
   finite_field_math: ^1.0.0
-  collection: any
 
 dev_dependencies:
   test: ^1.16.0
