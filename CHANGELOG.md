@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.1
+
+- Add `toJson`, `fromJson`, `toString` to ReedSolomonDecodeResult.
+
 ## 2.0.0
 
 ### Breaking changes

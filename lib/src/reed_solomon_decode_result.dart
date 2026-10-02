@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 /// Result of a Reed-Solomon decode attempt.
 class ReedSolomonDecodeResult {
   /// Creates a decode result with unmodifiable defensive copies of all lists.
@@ -37,4 +39,76 @@ class ReedSolomonDecodeResult {
 
   /// Whether the received codeword already had all-zero syndromes.
   final bool wasAlreadyValid;
+
+  ReedSolomonDecodeResult copyWith({
+    List<int>? decodedData,
+    List<int>? correctedCodeword,
+    List<int>? correctedPositions,
+    List<int>? erasurePositions,
+    List<int>? unknownErrorPositions,
+    bool? wasAlreadyValid,
+  }) {
+    return ReedSolomonDecodeResult(
+      decodedData: decodedData ?? this.decodedData,
+      correctedCodeword: correctedCodeword ?? this.correctedCodeword,
+      correctedPositions: correctedPositions ?? this.correctedPositions,
+      erasurePositions: erasurePositions ?? this.erasurePositions,
+      unknownErrorPositions:
+          unknownErrorPositions ?? this.unknownErrorPositions,
+      wasAlreadyValid: wasAlreadyValid ?? this.wasAlreadyValid,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'decodedData': decodedData,
+      'correctedCodeword': correctedCodeword,
+      'correctedPositions': correctedPositions,
+      'erasurePositions': erasurePositions,
+      'unknownErrorPositions': unknownErrorPositions,
+      'wasAlreadyValid': wasAlreadyValid,
+    };
+  }
+
+  factory ReedSolomonDecodeResult.fromJson(Map<String, dynamic> map) {
+    return ReedSolomonDecodeResult(
+      decodedData: List<int>.from(map['decodedData'] as List<int>),
+      correctedCodeword: List<int>.from(map['correctedCodeword'] as List<int>),
+      correctedPositions:
+          List<int>.from(map['correctedPositions'] as List<int>),
+      erasurePositions: List<int>.from(map['erasurePositions'] as List<int>),
+      unknownErrorPositions:
+          List<int>.from(map['unknownErrorPositions'] as List<int>),
+      wasAlreadyValid: (map['wasAlreadyValid'] as bool?) ?? false,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'ReedSolomonDecodeResult(decodedData: $decodedData, correctedCodeword: $correctedCodeword, correctedPositions: $correctedPositions, erasurePositions: $erasurePositions, unknownErrorPositions: $unknownErrorPositions, wasAlreadyValid: $wasAlreadyValid)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    final listEquals = const DeepCollectionEquality().equals;
+
+    return other is ReedSolomonDecodeResult &&
+        listEquals(other.decodedData, decodedData) &&
+        listEquals(other.correctedCodeword, correctedCodeword) &&
+        listEquals(other.correctedPositions, correctedPositions) &&
+        listEquals(other.erasurePositions, erasurePositions) &&
+        listEquals(other.unknownErrorPositions, unknownErrorPositions) &&
+        other.wasAlreadyValid == wasAlreadyValid;
+  }
+
+  @override
+  int get hashCode {
+    return decodedData.hashCode ^
+        correctedCodeword.hashCode ^
+        correctedPositions.hashCode ^
+        erasurePositions.hashCode ^
+        unknownErrorPositions.hashCode ^
+        wasAlreadyValid.hashCode;
+  }
 }

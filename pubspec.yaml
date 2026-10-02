@@ -1,6 +1,6 @@
 name: reed_solomon_codec
 description: Pure Dart Reed-Solomon encoder/decoder over GF(2^m), with full errors-and-erasures decoding.
-version: 2.0.0
+version: 2.0.1
 repository: https://github.com/hasanmhallak/reed-solomon-dart
 
 environment:
